@@ -16,7 +16,7 @@ setuptools.setup(
     url="https://github.com/davidteather/triller-api",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    download_url="https://github.com/davidteather/triller-api/tarball/master",
+    download_url="https://github.com/davidteather/triller-api/tarball/main",
     keywords=["triller", "api", "triller-api", "unofficial"],
     install_requires=["requests"],
     classifiers=[
