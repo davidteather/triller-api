@@ -1,2 +1,2 @@
 # triller-api
- The Unofficial Trilelr API Wrapper In Python
+ The Unofficial Triller API Wrapper In Python
