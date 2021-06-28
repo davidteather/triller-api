@@ -5,6 +5,7 @@ from datetime import datetime
 from .exceptions import TrillerLoginException
 from .exceptions import TrillerAPIException
 
+
 class User:
     """This represents a Triller account"""
 
@@ -12,6 +13,7 @@ class User:
     password: str
     auth_token: str
     token_expiration: str
+    triller_id: str
 
     def __init__(self, username: str, password: str):
         """Create and log into a Triller user's account."""
@@ -21,11 +23,15 @@ class User:
 
     def login(self):
         """Performs the log in action for a Triller user."""
-        response = requests.post("https://social.triller.co/v1.5/user/auth", data={"username": self.username, "password": self.password}).json()
+        response = requests.post(
+            "https://social.triller.co/v1.5/user/auth",
+            data={"username": self.username, "password": self.password},
+        ).json()
         if not response["status"]:
             raise TrillerLoginException(message=response.get("message", "Login Failed"))
         self.auth_token = response["auth_token"]
         self.token_expiration = datetime.fromisoformat(response["token_expiration"])
+        self.triller_id = response["user"]["user_id"]
 
     def get_trending_hashtags(self):
         """Retrieves trending hashtags"""
@@ -42,10 +48,7 @@ class User:
         per_page_limit = 15
         page = 1
         while len(videos) < count:
-            params = {
-                "page": page,
-                "limit": per_page_limit
-            }
+            params = {"page": page, "limit": per_page_limit}
             data = self.__get(api_url, params=params)
             ads.extend(data["ads"])
             tracks.extend(data["tracks"])
@@ -74,10 +77,7 @@ class User:
         per_page_limit = 6
         before_time = datetime.now().isoformat()
         while len(videos) < count:
-            params = {
-                "before_time": before_time,
-                "limit": per_page_limit
-            }
+            params = {"before_time": before_time, "limit": per_page_limit}
             data = self.__get(api_url, params=params)
             users.extend(data["users"])
             pre_extension_length = len(videos)
@@ -96,7 +96,7 @@ class User:
 
     def get_user_posts_by_username(self, username, count=6):
         """Retrieves a user's posts given a username"""
-        user_id = self.user_object(username)['user_id']
+        user_id = self.user_object(username)["user_id"]
         return self.get_user_posts(user_id, count=count)
 
     def get_hashtag_object(self, hashtag: str):
@@ -112,10 +112,7 @@ class User:
         videos = []
         page = 1
         while len(videos) < count:
-            params = {
-                "page": page,
-                "hash_tag": hashtag
-            }
+            params = {"page": page, "hash_tag": hashtag}
             data = self.__get(api_url, params=params)
             users.extend(data["users"])
             pre_extension_length = len(videos)
@@ -140,10 +137,7 @@ class User:
         videos = []
         page = 1
         while len(videos) < count:
-            params = {
-                "page": page,
-                "hash_tag": hashtag
-            }
+            params = {"page": page, "hash_tag": hashtag}
             data = self.__get(api_url, params=params)
             users.extend(data["users"])
 
@@ -199,13 +193,17 @@ class User:
     def follow_user(self, user_id):
         """Follows a user given a user's id (Triller account logged into must have email verified)"""
         api_url = "https://social.triller.co/v1.5/api/users/follow"
-        data = self.__post(api_url, {"followed_ids": [user_id]})
+        data = self.__post(
+            api_url, {"followed_ids": [user_id], "follower_id": self.triller_id}
+        )
         return data["status"]
 
     def unfollow_user(self, user_id):
         """Unfollows a user given a user's id"""
         api_url = "https://social.triller.co/v1.5/api/users/follow/delete"
-        data = self.__post(api_url, {"followed_ids": [user_id]})
+        data = self.__post(
+            api_url, {"followed_ids": [user_id], "follower_id": self.triller_id}
+        )
         return data["status"]
 
     #
@@ -227,9 +225,9 @@ class User:
         if self.token_expiration < datetime.now():
             self.login()
         params["auth_token"] = self.auth_token
-        
+
         data = requests.post(url, params=params, data=data).json()
-        
+
         if not data["status"]:
             raise TrillerAPIException(message=data["message"])
 
