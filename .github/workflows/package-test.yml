@@ -21,7 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - uses: microsoft/playwright-github-action@v1
       - name: Install Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -31,7 +30,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
-          python -m playwright install
       - name: Run Tests
         env:
           triller_username: ${{ secrets.triller_username }}
