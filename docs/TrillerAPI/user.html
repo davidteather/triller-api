@@ -49,6 +49,9 @@
                                 <a class="variable" href="#User.token_expiration">token_expiration</a>
                         </li>
                         <li>
+                                <a class="variable" href="#User.triller_id">triller_id</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#User.login">login</a>
                         </li>
                         <li>
@@ -124,6 +127,7 @@
 <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">TrillerLoginException</span>
 <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">TrillerAPIException</span>
 
+
 <span class="k">class</span> <span class="nc">User</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;This represents a Triller account&quot;&quot;&quot;</span>
 
@@ -131,6 +135,7 @@
     <span class="n">password</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">auth_token</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">token_expiration</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">triller_id</span><span class="p">:</span> <span class="nb">str</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and log into a Triller user&#39;s account.&quot;&quot;&quot;</span>
@@ -140,11 +145,15 @@
 
     <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Performs the log in action for a Triller user.&quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://social.triller.co/v1.5/user/auth&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="s2">&quot;https://social.triller.co/v1.5/user/auth&quot;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">},</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">TrillerLoginException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;Login Failed&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;auth_token&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token_expiration</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;token_expiration&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">][</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">get_trending_hashtags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Retrieves trending hashtags&quot;&quot;&quot;</span>
@@ -161,10 +170,7 @@
         <span class="n">per_page_limit</span> <span class="o">=</span> <span class="mi">15</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">ads</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;ads&quot;</span><span class="p">])</span>
             <span class="n">tracks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">])</span>
@@ -193,10 +199,7 @@
         <span class="n">per_page_limit</span> <span class="o">=</span> <span class="mi">6</span>
         <span class="n">before_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;before_time&quot;</span><span class="p">:</span> <span class="n">before_time</span><span class="p">,</span>
-                <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;before_time&quot;</span><span class="p">:</span> <span class="n">before_time</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
             <span class="n">pre_extension_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
@@ -215,7 +218,7 @@
 
     <span class="k">def</span> <span class="nf">get_user_posts_by_username</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Retrieves a user&#39;s posts given a username&quot;&quot;&quot;</span>
-        <span class="n">user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_object</span><span class="p">(</span><span class="n">username</span><span class="p">)[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_object</span><span class="p">(</span><span class="n">username</span><span class="p">)[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_posts</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_hashtag_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashtag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -231,10 +234,7 @@
         <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
             <span class="n">pre_extension_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
@@ -259,10 +259,7 @@
         <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
 
@@ -318,13 +315,17 @@
     <span class="k">def</span> <span class="nf">follow_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Follows a user given a user&#39;s id (Triller account logged into must have email verified)&quot;&quot;&quot;</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;https://social.triller.co/v1.5/api/users/follow&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">]})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span>
+            <span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">],</span> <span class="s2">&quot;follower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span><span class="p">}</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">unfollow_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unfollows a user given a user&#39;s id&quot;&quot;&quot;</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;https://social.triller.co/v1.5/api/users/follow/delete&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">]})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span>
+            <span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">],</span> <span class="s2">&quot;follower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span><span class="p">}</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
 
     <span class="c1">#</span>
@@ -346,9 +347,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_expiration</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
         <span class="n">params</span><span class="p">[</span><span class="s2">&quot;auth_token&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span>
-        
+
         <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">TrillerAPIException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">])</span>
 
@@ -376,6 +377,7 @@
     <span class="n">password</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">auth_token</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">token_expiration</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">triller_id</span><span class="p">:</span> <span class="nb">str</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and log into a Triller user&#39;s account.&quot;&quot;&quot;</span>
@@ -385,11 +387,15 @@
 
     <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Performs the log in action for a Triller user.&quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://social.triller.co/v1.5/user/auth&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="s2">&quot;https://social.triller.co/v1.5/user/auth&quot;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">},</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">TrillerLoginException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;Login Failed&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;auth_token&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token_expiration</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;token_expiration&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">][</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">get_trending_hashtags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Retrieves trending hashtags&quot;&quot;&quot;</span>
@@ -406,10 +412,7 @@
         <span class="n">per_page_limit</span> <span class="o">=</span> <span class="mi">15</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">ads</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;ads&quot;</span><span class="p">])</span>
             <span class="n">tracks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">])</span>
@@ -438,10 +441,7 @@
         <span class="n">per_page_limit</span> <span class="o">=</span> <span class="mi">6</span>
         <span class="n">before_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;before_time&quot;</span><span class="p">:</span> <span class="n">before_time</span><span class="p">,</span>
-                <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;before_time&quot;</span><span class="p">:</span> <span class="n">before_time</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
             <span class="n">pre_extension_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
@@ -460,7 +460,7 @@
 
     <span class="k">def</span> <span class="nf">get_user_posts_by_username</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Retrieves a user&#39;s posts given a username&quot;&quot;&quot;</span>
-        <span class="n">user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_object</span><span class="p">(</span><span class="n">username</span><span class="p">)[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_object</span><span class="p">(</span><span class="n">username</span><span class="p">)[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_posts</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_hashtag_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashtag</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -476,10 +476,7 @@
         <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
             <span class="n">pre_extension_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
@@ -504,10 +501,7 @@
         <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
 
@@ -563,13 +557,17 @@
     <span class="k">def</span> <span class="nf">follow_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Follows a user given a user&#39;s id (Triller account logged into must have email verified)&quot;&quot;&quot;</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;https://social.triller.co/v1.5/api/users/follow&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">]})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span>
+            <span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">],</span> <span class="s2">&quot;follower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span><span class="p">}</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">unfollow_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unfollows a user given a user&#39;s id&quot;&quot;&quot;</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;https://social.triller.co/v1.5/api/users/follow/delete&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">]})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span>
+            <span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">],</span> <span class="s2">&quot;follower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span><span class="p">}</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
 
     <span class="c1">#</span>
@@ -591,9 +589,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_expiration</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
         <span class="n">params</span><span class="p">[</span><span class="s2">&quot;auth_token&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span>
-        
+
         <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">TrillerAPIException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">])</span>
 
@@ -665,6 +663,15 @@
     
 
                             </div>
+                            <div id="User.triller_id" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#User.triller_id">#&nbsp;&nbsp</a>
+
+        <span class="name">triller_id</span><span class="annotation">: str</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="User.login" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#User.login">#&nbsp;&nbsp</a>
 
@@ -677,11 +684,15 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Performs the log in action for a Triller user.&quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://social.triller.co/v1.5/user/auth&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="s2">&quot;https://social.triller.co/v1.5/user/auth&quot;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">},</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">TrillerLoginException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;Login Failed&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;auth_token&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token_expiration</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;token_expiration&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">][</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
 </pre></div>
 
         </details>
@@ -734,10 +745,7 @@
         <span class="n">per_page_limit</span> <span class="o">=</span> <span class="mi">15</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">ads</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;ads&quot;</span><span class="p">])</span>
             <span class="n">tracks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">])</span>
@@ -784,10 +792,7 @@
         <span class="n">per_page_limit</span> <span class="o">=</span> <span class="mi">6</span>
         <span class="n">before_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;before_time&quot;</span><span class="p">:</span> <span class="n">before_time</span><span class="p">,</span>
-                <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;before_time&quot;</span><span class="p">:</span> <span class="n">before_time</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="n">per_page_limit</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
             <span class="n">pre_extension_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
@@ -824,7 +829,7 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_user_posts_by_username</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Retrieves a user&#39;s posts given a username&quot;&quot;&quot;</span>
-        <span class="n">user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_object</span><span class="p">(</span><span class="n">username</span><span class="p">)[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_object</span><span class="p">(</span><span class="n">username</span><span class="p">)[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_posts</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
 </pre></div>
 
@@ -876,10 +881,7 @@
         <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
             <span class="n">pre_extension_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
@@ -922,10 +924,7 @@
         <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-                <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span>
-            <span class="p">}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;hash_tag&quot;</span><span class="p">:</span> <span class="n">hashtag</span><span class="p">}</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
             <span class="n">users</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
 
@@ -1107,7 +1106,9 @@
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">follow_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Follows a user given a user&#39;s id (Triller account logged into must have email verified)&quot;&quot;&quot;</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;https://social.triller.co/v1.5/api/users/follow&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">]})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span>
+            <span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">],</span> <span class="s2">&quot;follower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span><span class="p">}</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
 </pre></div>
 
@@ -1131,7 +1132,9 @@
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">unfollow_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unfollows a user given a user&#39;s id&quot;&quot;&quot;</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;https://social.triller.co/v1.5/api/users/follow/delete&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">]})</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__post</span><span class="p">(</span>
+            <span class="n">api_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;followed_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">user_id</span><span class="p">],</span> <span class="s2">&quot;follower_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">triller_id</span><span class="p">}</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
 </pre></div>
 

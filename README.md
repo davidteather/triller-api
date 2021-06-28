@@ -18,10 +18,3 @@ trending = user.get_trending()
 ```
 
 [Full Documentation](https://davidteather.github.io/triller-api/docs) (as of now you only have to read the TrillerAPI.user User class)
-## TODO
-- Discover posts
-    - user's posts
-    - trending music
-    - trending hashtags
-- Add documentation
-- Quick start guide
