@@ -17,4 +17,4 @@ user = TrillerAPI.login("YOUR_TRILLER_USERNAME", "YOUR_TRILLER_PASSWORD")
 trending = user.get_trending()
 ```
 
-[Full Documentation](https://davidteather.github.io/triller-api/docs) (as of now you only have to read the TrillerAPI.user User class)
+[Full Documentation](https://davidteather.github.io/triller-api) (as of now you only have to read the TrillerAPI.user User class)
